@@ -22,7 +22,7 @@ Create a new file in your backup folder that will contain the backup script and 
 
 ```vi  ~/backup/run```
 
-Now paste the following into the file. **Note::** variables are indicated with [square brackets].
+Now paste the following into the file. **Note:** variables are indicated with [square brackets].
 
 ```
 #!/bin/sh
