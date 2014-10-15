@@ -94,7 +94,7 @@ MAILTO=[email@address.com]
 The ```MAILTO``` isn't necesary but I like to know when the script has been successful or not. Save and exit.
 
 ## Other tidbits
-Keeping every backup ever created in your S3 bucket could be costly and not particularly efficient. Amazon S3 has the ability to "expire" content in a bucket that is older than a set length of time. It can also be configured to move that content to Amazon's Glacier service if you don't wish to delete the content.
+Keeping every backup ever created in your S3 bucket could be costly and not particularly efficient. Amazon S3 has the ability to "expire" content in a bucket that is older than a set length of time. It can also be configured to move that content to Amazon's Glacier service if you don't wish to delete the content. For example, I expire all backups that are older than 14 days.
 
 Have a read of the their docs to implement it on your bucket: http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html
 
