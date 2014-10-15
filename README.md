@@ -99,4 +99,4 @@ Keeping every backup ever created in your S3 bucket could be costly and not part
 Have a read of the their docs to implement it on your bucket: http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html
 
 ## Think you can do better?
-If you think you could improve this – and I've not doubt that you could – let me know. Tweet me [@oliverfarrell](http://twitter.com/oliverfarrell).
+If you think you could improve this – and I've no doubt that you could – let me know. Tweet me [@oliverfarrell](http://twitter.com/oliverfarrell).
