@@ -1,25 +1,28 @@
 Ubuntu (14.04) Amazon S3 Backup
 =========
 
-A bash script to backup any folder/s on a Ubuntu (14.04) Linux server and upload the Amazon S3.
+I needed a script that would backup all the sites (and later databases) hosted on my DigitalOcean[http://digitalocean.com] server running Ubuntu Linux 14.04 and push the backups to an Amazon S3 bucket.
+
+The following outlines how to setup such backups and includes some useful tid-bits that are worth implementing on your S3 bucket.
 
 ## Prerequisites
-* s3cmd: http://s3tools.org/s3cmd
+* s3cmd[http://s3tools.org/] (http://s3tools.org/s3cmd) – ```sudo apt-get install s3cmd``` then run ```s3cmd --configure``` to link your Amazon S3 account.
 
 ## Step one
-Firstly we need to create a directory for our backups and the backup script to live. This can be anywhere, but I've put it in the root folder.
+Firstly we need to create a directory where the backups and the backup script will live. This can be anywhere, but I've put it in my root folder.
 
 ```mkdir -p ~/backup```
 
-Then we need to create a directory where the files we're backing up will be stored before uploading to S3.
+Then we need to create a directory where the files we're backing up will be stored before uploading to S3. This just makes managing multiple backup types a little easier.
 
 ```mkdir -p ~/backup/sites```
 
 ## Step two
+Create a new file in your backup folder that will contain the backup script and be called by our cronjob later on.
 
-Coming soon.
+```vi  ~/backup/run```
 
-## Step three
+Now paste the following into the file. **Note::** variables are indicated with [square brackets].
 
 ```
 #!/bin/sh
@@ -47,3 +50,26 @@ s3cmd put --recursive ~/backup/databases s3://[bucket-name]/sub-folder/
 rm -rf ~/backup/sites/*
 rm -rf ~/backup/databases/*
 ```
+
+Save and exit.
+
+You can test whether the script works by running ```~/backup/run```
+
+## Step three
+Now we'll want to create a cronjob so this script runs automatically at a given interval. I wanted this to run at 1am every day of the week. Start by typing the following and pressing return.
+
+```crontab -e```
+
+Then paste the following into the file.
+
+```
+MAILTO=[email@address.com]
+0 1 * * * ~/backup/run
+```
+
+The ```MAILTO``` isn't necesary but I like to know when the script has been successful or not.
+
+## Other tidbits
+Keeping every backup ever created in your S3 could be costly and not particularly efficient. Amazon S3 as the ability to "expire" content in a bucket that is older than a set length of time. It can also be configured to move that content to Amazon's Glacier service if you don't wish to delete the content.
+
+Have a read of the their docs to implement it on your bucket: http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html
