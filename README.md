@@ -28,7 +28,7 @@ Now paste the following into the file. **Note::** variables are indicated with [
 #!/bin/sh
 
 # grab all sites and create a tar.gz archive
-tar -cvpzf ~/backup/sites/`date +%d-%m-%Y`.tar.gz /srv/users/[user]/apps
+tar -cvpzf ~/backup/sites/`date +%d-%m-%Y`.tar.gz /srv/users/[user]/apps # or any other directory
 
 # create a folder where we can dump all the raw .sql files
 mkdir -p ~/backup/databases/raw/ # this is a temp directory, it'll be deleted later
