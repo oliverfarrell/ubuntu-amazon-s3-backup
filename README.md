@@ -1,7 +1,7 @@
 Backup Ubuntu (14.04) Server to Amazon S3
 =========
 
-I needed a script that would backup all the sites (and later databases) hosted on my [DigitalOcean](http://digitalocean.com) server running Ubuntu Linux 14.04 and push the backups to an Amazon S3 bucket.
+I needed a script that would backup all the sites and databases hosted on my web server running Ubuntu Linux 14.04 and push the backups to an Amazon S3 bucket.
 
 The following outlines how to setup such backups and includes some useful tid-bits that are worth implementing on your S3 bucket.
 
@@ -91,10 +91,10 @@ MAILTO=[email@address.com]
 0 1 * * * ~/backup/run
 ```
 
-The ```MAILTO``` isn't necesary but I like to know when the script has been successful or not.
+The ```MAILTO``` isn't necesary but I like to know when the script has been successful or not. Save and exit.
 
 ## Other tidbits
-Keeping every backup ever created in your S3 could be costly and not particularly efficient. Amazon S3 as the ability to "expire" content in a bucket that is older than a set length of time. It can also be configured to move that content to Amazon's Glacier service if you don't wish to delete the content.
+Keeping every backup ever created in your S3 bucket could be costly and not particularly efficient. Amazon S3 has the ability to "expire" content in a bucket that is older than a set length of time. It can also be configured to move that content to Amazon's Glacier service if you don't wish to delete the content.
 
 Have a read of the their docs to implement it on your bucket: http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html
 
