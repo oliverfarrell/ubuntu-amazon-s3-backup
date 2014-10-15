@@ -34,7 +34,7 @@ tar -cvpzf ~/backup/sites/`date +%d-%m-%Y`.tar.gz /srv/users/[user]/apps # or an
 mkdir -p ~/backup/databases/raw/ # this is a temp directory, it'll be deleted later
 
 # grab all mysql databases
-~/backup/databases # a python script
+~/backup/mysql # a python script
 
 # grab all raw .sql files and create a tar.gz archive
 tar -zcvf ~/backup/databases/$(date '+%d-%m-%Y').tar.gz ~/backup/databases/raw/
