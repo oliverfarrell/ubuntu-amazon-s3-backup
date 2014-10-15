@@ -77,7 +77,7 @@ for database in os.popen(database_list_command).readlines():
     print (".. done")
 ```
 
-*Note:* I happened across this script whilst researching how this could be done (sorry, can't rememeber where – I link it up if I find it). I am aware that there are much smarter ways of doing this, I just couldn't get any of them to work with my setup.
+**Note:** I happened across this script whilst researching how this could be done (sorry, can't rememeber where – I link it up if I find it). I am aware that there are much smarter ways of doing this, I just couldn't get any of them to work with my setup.
 
 ## Step four
 Now we'll want to create a cronjob so this script runs automatically at a given interval. I wanted this to run at 1am every day of the week. Start by typing the following and pressing return.
