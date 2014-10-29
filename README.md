@@ -53,8 +53,6 @@ rm -rf ~/backup/databases/*
 
 Save and exit.
 
-You can test whether the script works by running ```~/backup/run```
-
 ## Step three
 You'll see reference in the above script to a ```~/backup/mysql```. This pretty much does what is says on the tin – creates a backup of all your MySQL databases and stores them in a directory on the server. It looks like this:
 
@@ -80,6 +78,12 @@ for database in os.popen(database_list_command).readlines():
 **Note:** I happened across this script whilst researching how this could be done (sorry, can't rememeber where – I'll link it up if I find it). I am aware that there are much smarter ways of doing this, I just couldn't get any of them to work with my setup.
 
 ## Step four
+
+Now you need to chmod the file ready to be run ```chmod 775 ~/backup/run```
+
+You can test whether the script works by running ```~/backup/run```
+
+## Step five
 Now we'll want to create a cronjob so this script runs automatically at a given interval. I wanted this to run at 1am every day of the week. Start by typing the following and pressing return.
 
 ```crontab -e```
