@@ -6,29 +6,42 @@ I needed a script that would backup all the sites and databases hosted on my web
 The following outlines how to setup such backups and includes some useful tid-bits that are worth implementing on your S3 bucket.
 
 ## Prerequisites
-* [s3cmd](http://s3tools.org/) – ```sudo apt-get install s3cmd``` then run ```s3cmd --configure``` to link your Amazon S3 account.
+* [AWS CLI](http://docs.aws.amazon.com/cli/latest/userguide/installing.html#install-bundle-user)
+```bash
+$ wget https://s3.amazonaws.com/aws-cli/awscli-bundle.zip
+$ unzip awscli-bundle.zip
+$ sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+$ aws configure
+```
+
 
 ## Step one
 Firstly we need to create a directory where the backups and the backup script will live. This can be anywhere, but I've put it in my root folder.
 
-```mkdir -p ~/backup```
+```bash
+$ mkdir -p ~/backup
+```
 
 Then we need to create a directory where the files we're backing up will be stored before uploading to S3. This just makes managing multiple backup types a little easier.
 
-```mkdir -p ~/backup/sites```
+```bash
+$ mkdir -p ~/backup/sites
+```
 
 ## Step two
 Create a new file in your backup folder that will contain the backup script and be called by our cronjob later on.
 
-```vi  ~/backup/run```
+```bash
+$vi  ~/backup/run
+```
 
 Now paste the following into the file. **Note:** variables are indicated with [square brackets].
 
-```
+```bash
 #!/bin/sh
 
 # grab all sites and create a tar.gz archive
-tar -cvpzf ~/backup/sites/`date +%d-%m-%Y`.tar.gz /srv/users/[user]/apps # or any other directory
+tar -cvpzf ~/backup/sites/site_`date +%d-%m-%Y`.tar.gz /srv/users/[user]/apps # or any other directory
 
 # create a folder where we can dump all the raw .sql files
 mkdir -p ~/backup/databases/raw/ # this is a temp directory, it'll be deleted later
@@ -37,14 +50,14 @@ mkdir -p ~/backup/databases/raw/ # this is a temp directory, it'll be deleted la
 ~/backup/mysql # a python script
 
 # grab all raw .sql files and create a tar.gz archive
-tar -zcvf ~/backup/databases/$(date '+%d-%m-%Y').tar.gz ~/backup/databases/raw/
+tar -zcvf ~/backup/databases/db_$(date '+%d-%m-%Y').tar.gz ~/backup/databases/raw/
 
 # delete the /raw/ directory once archived
 rm -rf ~/backup/databases/raw/
 
 # push the files to S3
-s3cmd put --recursive ~/backup/sites s3://[bucket-name]/sub-folder/
-s3cmd put --recursive ~/backup/databases s3://[bucket-name]/sub-folder/
+aws s3 cp --recursive ~/backup/sites s3://[bucket-name]/sub-folder/
+aws s3 cp --recursive ~/backup/databases s3://[bucket-name]/sub-folder/
 
 # delete the contents of the other directories as we don't need to store them once backed up
 rm -rf ~/backup/sites/*
@@ -56,7 +69,7 @@ Save and exit.
 ## Step three
 You'll see reference in the above script to a ```~/backup/mysql```. This pretty much does what is says on the tin – creates a backup of all your MySQL databases and stores them in a directory on the server. It looks like this:
 
-```
+```python
 #!/usr/bin/env python
 import os
 import time
@@ -79,14 +92,22 @@ for database in os.popen(database_list_command).readlines():
 
 ## Step four
 
-Now you need to chmod the file ready to be run ```chmod 775 ~/backup/run```
+Now you need to chmod the file ready to be run
+```bash
+$ chmod 775 ~/backup/run
+```
 
-You can test whether the script works by running ```~/backup/run```
+You can test whether the script works by running
+```bash
+$ ~/backup/run
+```
 
 ## Step five
 Now we'll want to create a cronjob so this script runs automatically at a given interval. I wanted this to run at 1am every day of the week. Start by typing the following and pressing return.
 
-```crontab -e```
+```bash
+$ crontab -e
+```
 
 Then paste the following into the file.
 
