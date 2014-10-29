@@ -56,8 +56,8 @@ tar -zcvf ~/backup/databases/db_$(date '+%d-%m-%Y').tar.gz ~/backup/databases/ra
 rm -rf ~/backup/databases/raw/
 
 # push the files to S3
-s3cmd put --recursive ~/backup/sites s3://[bucket-name]/sub-folder/
-s3cmd put --recursive ~/backup/databases s3://[bucket-name]/sub-folder/
+aws s3 cp --recursive ~/backup/sites s3://[bucket-name]/sub-folder/
+aws s3 cp --recursive ~/backup/databases s3://[bucket-name]/sub-folder/
 
 # delete the contents of the other directories as we don't need to store them once backed up
 rm -rf ~/backup/sites/*
