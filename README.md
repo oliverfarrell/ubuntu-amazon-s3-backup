@@ -41,7 +41,7 @@ Now paste the following into the file. **Note:** variables are indicated with [s
 #!/bin/sh
 
 # grab all sites and create a tar.gz archive
-tar -cvpzf ~/backup/sites/site_`date +%d-%m-%Y`.tar.gz /srv/users/[user]/apps # or any other directory
+/bin/tar -cvpzf ~/backup/sites/site_`date +%d-%m-%Y`.tar.gz /srv/users/[user]/apps # or any other directory
 
 # create a folder where we can dump all the raw .sql files
 mkdir -p ~/backup/databases/raw/ # this is a temp directory, it'll be deleted later
@@ -50,14 +50,14 @@ mkdir -p ~/backup/databases/raw/ # this is a temp directory, it'll be deleted la
 ~/backup/mysql # a python script
 
 # grab all raw .sql files and create a tar.gz archive
-tar -zcvf ~/backup/databases/db_$(date '+%d-%m-%Y').tar.gz ~/backup/databases/raw/
+/bin/tar -zcvf ~/backup/databases/db_$(date '+%d-%m-%Y').tar.gz ~/backup/databases/raw/
 
 # delete the /raw/ directory once archived
 rm -rf ~/backup/databases/raw/
 
 # push the files to S3
-aws s3 cp --recursive ~/backup/sites s3://[bucket-name]/sub-folder/
-aws s3 cp --recursive ~/backup/databases s3://[bucket-name]/sub-folder/
+/usr/local/bin/aws s3 cp --recursive ~/backup/sites s3://[bucket-name]/sub-folder/
+/usr/local/bin/aws s3 cp --recursive ~/backup/databases s3://[bucket-name]/sub-folder/
 
 # delete the contents of the other directories as we don't need to store them once backed up
 rm -rf ~/backup/sites/*
