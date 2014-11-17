@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+
+# Welcome to the setup script for S3 backup and Processing
+
+fancy_echo() {
+  printf "\n%b\n" "$1"
+}
+
+
+
+set -e
+
+BACKUP_PATH_DEFAULT="$HOME/backups"
+read -p "Please provide a path you would like to save backups [$BACKUP_PATH_DEFAULT]:" BACKUP_PATH
+BACKUP_PATH=${BACKUP_PATH:-$BACKUP_PATH_DEFAULT}
+
+SITE_BACKUP_SRC_DEFAULT="/var/www"
+read -p "Please provide a path you would like to backup from [$SITE_BACKUP_SRC_DEFAULT]:" SITE_BACKUP_SRC
+SITE_BACKUP_SRC=${SITE_BACKUP_SRC:-$SITE_BACKUP_SRC_DEFAULT}
+
+read -p "Please provide the MYSQL user you would like to save the database for:" MYSQL_USER
+MYSQL_USER=${MYSQL_USER}
+
+read -p "Please provide the MYSQL password:" MYSQL_PASSWORD
+MYSQL_PASSWORD=${MYSQL_PASSWORD}
+
+MYSQL_SERVER_DEFAULT="localhost"
+read -p "Please provide the server you would like to backup from [$MYSQL_SERVER_DEFAULT]:" MYSQL_SERVER
+MYSQL_SERVER=${MYSQL_SERVER:-$MYSQL_SERVER_DEFAULT}
+
+read -p "Please provide the AWS bucket name you would like to back up to:" AWS_BUCKETNAME
+AWS_BUCKETNAME=${AWS_BUCKETNAME}
+
+fancy_echo "Creating folder at $BACKUP_PATH"
+
+if [[ ! -d "$BACKUP_PATH" ]]; then
+  mkdir "$BACKUP_PATH"
+  fancy_echo "Created $BACKUP_PATH"
+else
+  fancy_echo "Folder already exists, using that instead."
+fi
+
+if [[ ! -d "$BACKUP_PATH/sites" ]]; then
+  mkdir "$BACKUP_PATH/sites"
+fi
+
+if [[ ! -d "$BACKUP_PATH/databases" ]]; then
+  mkdir "$BACKUP_PATH/databases"
+fi
+
+
+fancy_echo "Now downloading Amazon S3 and Configuring..."
+
+if [[ ! -d "$BACKUP_PATH/tmp" ]]; then
+  mkdir "$BACKUP_PATH/tmp"
+else
+  fancy_echo "Folder already exists, using that instead."
+fi
+wget https://s3.amazonaws.com/aws-cli/awscli-bundle.zip -P "$BACKUP_PATH/tmp/"
+
+unzip "$BACKUP_PATH/tmp/awscli-bundle.zip" -d "$BACKUP_PATH/tmp/"
+
+$BACKUP_PATH/tmp/awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+/usr/local/bin/aws configure
+
+fancy_echo "Finished installing and setting up AWS"
+fancy_echo "Setting rest of the scripts up"
+
+
+#unable to find original src of the script...as soon as I find the src I will give credit here
+/bin/cat <<EOM >$BACKUP_PATH/mysql
+#!/usr/bin/env python
+
+#unable to find original src of the script...as soon as I find the src I will give credit here
+
+import os
+import time
+username = '$MYSQL_USER'
+password = '$MYSQL_PASSWORD'
+hostname = '$MYSQL_SERVER'
+filestamp = time.strftime('%Y%m%d')
+database_list_command = "mysql -u%s -p%s -h%s --silent -N -e 'show databases'" % (username, password, hostname)
+for database in os.popen(database_list_command).readlines():
+    database = database.strip()
+    if database == 'information_schema' or database == 'performance_schema' or database == 'mysql':
+        continue
+    filename = "$BACKUP_PATH/databases/raw/%s-%s.sql" % (database, filestamp)
+    print "Backing up %s" % filename
+    os.popen("mysqldump -u%s -p%s -h%s -e --opt -c %s | gzip -c -9 > %s.gz" % (username, password, hostname, database, filename))
+    print (".. done")
+EOM
+
+chmod 775 "$BACKUP_PATH/mysql"
+
+/bin/cat <<EOM >$BACKUP_PATH/run
+#!/bin/sh
+
+# grab all sites and create a tar.gz archive
+/bin/tar -cvpzf $BACKUP_PATH/sites/site_`date +%d-%m-%Y`.tar.gz $SITE_BACKUP_SRC
+
+# create a folder where we can dump all the raw .sql files
+mkdir -p $BACKUP_PATH/databases/raw/ # this is a temp directory, it'll be deleted later
+
+# grab all mysql databases
+$BACKUP_PATH/mysql # a python script
+
+# grab all raw .sql files and create a tar.gz archive
+/bin/tar -cvpzf $BACKUP_PATH/databases/db_$(date '+%d-%m-%Y').tar.gz ~/backup/databases/raw/
+
+# delete the /raw/ directory once archived
+rm -rf $BACKUP_PATH/databases/raw/
+
+# push the files to S3
+/usr/local/bin/aws s3 cp --recursive $BACKUP_PATH/sites s3://$AWS_BUCKETNAME
+/usr/local/bin/aws s3 cp --recursive $BACKUP_PATH/databases s3://$AWS_BUCKETNAME
+
+# delete the contents of the other directories as we don't need to store them once backed up
+rm -rf $BACKUP_PATH/sites/*
+rm -rf $BACKUP_PATH/databases/*
+
+EOM
+
+chmod 775 "$BACKUP_PATH/run"
+
+fancy_echo "Adding default schedule to CRON"
+#  crontab -l > "$BACKUP_PATH/tmp/mycron"
+#  echo "0 1 * * * $BACKUP_PATH/run" >> "$BACKUP_PATH/tmp/mycron"
+#  crontab "$BACKUP_PATH/tmp/mycron"
+#  rm "$BACKUP_PATH/tmp/mycron"
+
+fancy_echo "If you would like to alter the script please alter the CRON Job \"crontab -e\""
+
+rm -rf "$BACKUP_PATH/tmp"
+
+fancy_echo "All done!!!! Welcome to the world of S3 Backups"
