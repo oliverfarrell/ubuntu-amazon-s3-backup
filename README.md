@@ -9,11 +9,11 @@ Read, then run the script:
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/oliverfarrell/ubuntu-amazon-s3-backup/master/setup) 2>&1 | tee ~/aws_backup.log
 ```
-**Until merged the url should be https://raw.githubusercontent.com/oliverfarrell/ubuntu-amazon-s3-backup/feature/all-in-one/setup** 
+**Until merged the url should be https://raw.githubusercontent.com/oliverfarrell/ubuntu-amazon-s3-backup/feature/all-in-one/setup**
 
 Debugging
 ---
-The last execution of the script will be output the result to '~/aws_backup.log'. Read through it to see if you can debug the issue yourself. If not, copy the lines where the script failed into a new (GitHub Issue for us)[https://github.com/oliverfarrell/ubuntu-amazon-s3-backup/issues/new]. Or, attach the whole log file as an attachment.
+The last execution of the script will be output the result to '~/aws_backup.log'. Read through it to see if you can debug the issue yourself. If not, copy the lines where the script failed into a new [GitHub Issue for us](https://github.com/oliverfarrell/ubuntu-amazon-s3-backup/issues/new). Or, attach the whole log file as an attachment.
 
 
 ## Other tidbits
