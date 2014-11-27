@@ -66,28 +66,8 @@ $BACKUP_PATH/tmp/awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 fancy_echo "Finished installing and setting up AWS"
 fancy_echo "Setting rest of the scripts up"
 
-
-#unable to find original src of the script...as soon as I find the src I will give credit here
 /bin/cat <<EOM >$BACKUP_PATH/mysql
-#!/usr/bin/env python
-
-#unable to find original src of the script...as soon as I find the src I will give credit here
-
-import os
-import time
-username = '$MYSQL_USER'
-password = '$MYSQL_PASSWORD'
-hostname = '$MYSQL_SERVER'
-filestamp = time.strftime('%Y%m%d')
-database_list_command = "mysql -u%s -p%s -h%s --silent -N -e 'show databases'" % (username, password, hostname)
-for database in os.popen(database_list_command).readlines():
-    database = database.strip()
-    if database == 'information_schema' or database == 'performance_schema' or database == 'mysql':
-        continue
-    filename = "$BACKUP_PATH/databases/raw/%s-%s.sql" % (database, filestamp)
-    print "Backing up %s" % filename
-    os.popen("mysqldump -u%s -p%s -h%s -e --opt -c %s | gzip -c -9 > %s.gz" % (username, password, hostname, database, filename))
-    print (".. done")
+mysql -s -r -u $MYSQL_USER -p$MYSQL_PASSWORD -e 'show databases' | while read db; do mysqldump --skip-lock-tables -u $MYSQL_SERVER -p$MYSQL_PASSWORD $db -r $BACKUP_PATH/databases/raw/${db}.sql; [[ $? -eq 0 ]] && gzip ~/backup/databases/raw/${db}.sql; done
 EOM
 
 chmod 775 "$BACKUP_PATH/mysql"
@@ -132,4 +112,4 @@ fancy_echo "If you would like to alter the script please alter the CRON Job \"cr
 
 rm -rf "$BACKUP_PATH/tmp"
 
-fancy_echo "All done!!!! Welcome to the world of S3 Backups"
+fancy_echo "All done! Welcome to the world of S3 Backups."
