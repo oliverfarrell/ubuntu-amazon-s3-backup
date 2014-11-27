@@ -9,7 +9,6 @@ Read, then run the script:
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/oliverfarrell/ubuntu-amazon-s3-backup/master/setup) 2>&1 | tee ~/aws_backup.log
 ```
-**Until merged the url should be https://raw.githubusercontent.com/oliverfarrell/ubuntu-amazon-s3-backup/feature/all-in-one/setup**
 
 Debugging
 ---
@@ -22,4 +21,4 @@ Keeping every backup ever created in your S3 bucket could be costly and not part
 Have a read of the their docs to implement it on your bucket: http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html
 
 ## Think you can do better?
-This is a very early script and our first attempt at a full bash script, if you would rather try your hand at the manual version please take a look back at a previous branch **INSERT BRANCH HERE**. If you think you can do better Tweet us at [@oliverfarrell](http://twitter.com/oliverfarrell) or [@trickierstinky](http://twitter.com/trickierstinky), better yet fork and issue a pull request!
+This is a very early script and our first attempt at a full bash script, if you would rather try your hand at the manual version please take a look back at a previous commits . If you think you can do better Tweet us at [@oliverfarrell](http://twitter.com/oliverfarrell) or [@trickierstinky](http://twitter.com/trickierstinky), better yet fork and issue a pull request!
