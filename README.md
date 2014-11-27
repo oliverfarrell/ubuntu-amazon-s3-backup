@@ -41,7 +41,7 @@ Now paste the following into the file. **Note:** variables are indicated with [s
 #!/bin/sh
 
 # grab all sites and create a tar.gz archive
-tar -cvpzf ~/backup/sites/site_`date +%d-%m-%Y`.tar.gz /srv/users/[user]/apps # or any other directory
+/bin/tar -cvpzf ~/backup/sites/site_`date +%d-%m-%Y`.tar.gz /srv/users/[user]/apps # or any other directory
 
 # create a folder where we can dump all the raw .sql files
 mkdir -p ~/backup/databases/raw/ # this is a temp directory, it'll be deleted later
@@ -50,14 +50,14 @@ mkdir -p ~/backup/databases/raw/ # this is a temp directory, it'll be deleted la
 ~/backup/mysql # a python script
 
 # grab all raw .sql files and create a tar.gz archive
-tar -zcvf ~/backup/databases/db_$(date '+%d-%m-%Y').tar.gz ~/backup/databases/raw/
+/bin/tar -zcvf ~/backup/databases/db_$(date '+%d-%m-%Y').tar.gz ~/backup/databases/raw/
 
 # delete the /raw/ directory once archived
 rm -rf ~/backup/databases/raw/
 
 # push the files to S3
-s3cmd put --recursive ~/backup/sites s3://[bucket-name]/sub-folder/
-s3cmd put --recursive ~/backup/databases s3://[bucket-name]/sub-folder/
+/usr/local/bin/aws s3 cp --recursive ~/backup/sites s3://[bucket-name]/sub-folder/
+/usr/local/bin/aws s3 cp --recursive ~/backup/databases s3://[bucket-name]/sub-folder/
 
 # delete the contents of the other directories as we don't need to store them once backed up
 rm -rf ~/backup/sites/*
@@ -69,26 +69,9 @@ Save and exit.
 ## Step three
 You'll see reference in the above script to a ```~/backup/mysql```. This pretty much does what is says on the tin – creates a backup of all your MySQL databases and stores them in a directory on the server. It looks like this:
 
-```python
-#!/usr/bin/env python
-import os
-import time
-username = '[user]'
-password = '[password]'
-hostname = 'localhost'
-filestamp = time.strftime('%Y%m%d')
-database_list_command = "mysql -u%s -p%s -h%s --silent -N -e 'show databases'" % (username, password, hostname)
-for database in os.popen(database_list_command).readlines():
-database = database.strip()
-if database == 'information_schema' or database == 'performance_schema' or database == 'mysql':
-continue
-filename = "~/backup/databases/raw/%s-%s.sql" % (database, filestamp)
-print "Backing up %s" % filename
-os.popen("mysqldump -u%s -p%s -h%s -e --opt -c %s | gzip -c -9 > %s.gz" % (username, password, hostname, database, filename))
-print (".. done")
+```bash
+mysql -s -r -u [user] -p[password] -e 'show databases' | while read db; do mysqldump --skip-lock-tables -u [user] -p[password] $db -r ~/backup/databases/raw/${db}.sql; [[ $? -eq 0 ]] && gzip ~/backup/databases/raw/${db}.sql; done
 ```
-
-**Note:** I happened across this script whilst researching how this could be done (sorry, can't rememeber where – I'll link it up if I find it). I am aware that there are much smarter ways of doing this, I just couldn't get any of them to work with my setup.
 
 ## Step four
 
@@ -116,7 +99,7 @@ MAILTO=[email@address.com]
 0 1 * * * ~/backup/run
 ```
 
-The ```MAILTO``` isn't necessary but I like to know when the script has been successful or not. Save and exit.
+The ```MAILTO``` isn't necesary but I like to know when the script has been successful or not. Save and exit.
 
 ## Other tidbits
 Keeping every backup ever created in your S3 bucket could be costly and not particularly efficient. Amazon S3 has the ability to "expire" content in a bucket that is older than a set length of time. It can also be configured to move that content to Amazon's Glacier service if you don't wish to delete the content. For example, I expire all backups that are older than 14 days.
