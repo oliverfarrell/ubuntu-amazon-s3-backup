@@ -6,8 +6,6 @@ fancy_echo() {
   printf "\n%b\n" "$1"
 }
 
-
-
 set -e
 
 BACKUP_PATH_DEFAULT="$HOME/backups"
@@ -18,16 +16,19 @@ SITE_BACKUP_SRC_DEFAULT="/var/www"
 read -p "Please provide a path you would like to backup from [$SITE_BACKUP_SRC_DEFAULT]:" SITE_BACKUP_SRC
 SITE_BACKUP_SRC=${SITE_BACKUP_SRC:-$SITE_BACKUP_SRC_DEFAULT}
 
-read -p "Please provide the MYSQL user you would like to save the database for:" MYSQL_USER
-MYSQL_USER=${MYSQL_USER}
+read -p "Would you like to backup a MYSQL database? (y/n) [n]:" MYSQL_BACKUP
+MYSQL_BACKUP=${MYSQL_BACKUP}
+if [[ $MYSQL_BACKUP -eq "y"]] || [[$MYSQL_BACKUP -eq "Y"]]; then
+  read -p "Please provide the MYSQL user you would like to save the database for:" MYSQL_USER
+  MYSQL_USER=${MYSQL_USER}
 
-read -p "Please provide the MYSQL password:" MYSQL_PASSWORD
-MYSQL_PASSWORD=${MYSQL_PASSWORD}
+  read -p "Please provide the MYSQL password:" MYSQL_PASSWORD
+  MYSQL_PASSWORD=${MYSQL_PASSWORD}
 
-MYSQL_SERVER_DEFAULT="localhost"
-read -p "Please provide the server you would like to backup from [$MYSQL_SERVER_DEFAULT]:" MYSQL_SERVER
-MYSQL_SERVER=${MYSQL_SERVER:-$MYSQL_SERVER_DEFAULT}
-
+  MYSQL_SERVER_DEFAULT="localhost"
+  read -p "Please provide the server you would like to backup from [$MYSQL_SERVER_DEFAULT]:" MYSQL_SERVER
+  MYSQL_SERVER=${MYSQL_SERVER:-$MYSQL_SERVER_DEFAULT}
+fi
 read -p "Please provide the AWS bucket name you would like to back up to:" AWS_BUCKETNAME
 AWS_BUCKETNAME=${AWS_BUCKETNAME}
 
@@ -66,11 +67,13 @@ $BACKUP_PATH/tmp/awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 fancy_echo "Finished installing and setting up AWS"
 fancy_echo "Setting rest of the scripts up"
 
-/bin/cat <<EOM >$BACKUP_PATH/mysql
-mysql -s -r -u $MYSQL_USER -p$MYSQL_PASSWORD -e 'show databases' | while read db; do mysqldump --skip-lock-tables -u $MYSQL_SERVER -p$MYSQL_PASSWORD $db -r $BACKUP_PATH/databases/raw/${db}.sql; [[ $? -eq 0 ]] && gzip ~/backup/databases/raw/${db}.sql; done
+if [[ $MYSQL_BACKUP -eq "y"]] || [[$MYSQL_BACKUP -eq "Y"]]; then
+  /bin/cat <<EOM >$BACKUP_PATH/mysql
+  mysql -s -r -u $MYSQL_USER -p$MYSQL_PASSWORD -e 'show databases' | while read db; do mysqldump --skip-lock-tables -u $MYSQL_SERVER -p$MYSQL_PASSWORD $db -r $BACKUP_PATH/databases/raw/${db}.sql; [[ $? -eq 0 ]] && gzip ~/backup/databases/raw/${db}.sql; done
 EOM
 
-chmod 775 "$BACKUP_PATH/mysql"
+  chmod 775 "$BACKUP_PATH/mysql"
+fi
 
 /bin/cat <<EOM >$BACKUP_PATH/run
 #!/bin/sh
@@ -81,14 +84,17 @@ chmod 775 "$BACKUP_PATH/mysql"
 # create a folder where we can dump all the raw .sql files
 mkdir -p $BACKUP_PATH/databases/raw/ # this is a temp directory, it'll be deleted later
 
-# grab all mysql databases
-$BACKUP_PATH/mysql # a python script
+if [[ $MYSQL_BACKUP -eq "y"]] || [[$MYSQL_BACKUP -eq "Y"]]; then
+  # grab all mysql databases
+  $BACKUP_PATH/mysql # a python script
 
-# grab all raw .sql files and create a tar.gz archive
-/bin/tar -cvpzf $BACKUP_PATH/databases/db_$(date '+%d-%m-%Y').tar.gz ~/backup/databases/raw/
+  # grab all raw .sql files and create a tar.gz archive
+  /bin/tar -cvpzf $BACKUP_PATH/databases/db_$(date '+%d-%m-%Y').tar.gz ~/backup/databases/raw/
+
 
 # delete the /raw/ directory once archived
 rm -rf $BACKUP_PATH/databases/raw/
+fi
 
 # push the files to S3
 /usr/local/bin/aws s3 cp --recursive $BACKUP_PATH/sites s3://$AWS_BUCKETNAME
@@ -96,7 +102,9 @@ rm -rf $BACKUP_PATH/databases/raw/
 
 # delete the contents of the other directories as we don't need to store them once backed up
 rm -rf $BACKUP_PATH/sites/*
-rm -rf $BACKUP_PATH/databases/*
+if [[ $MYSQL_BACKUP -eq "y"]] || [[$MYSQL_BACKUP -eq "Y"]]; then
+  rm -rf $BACKUP_PATH/databases/*
+fi
 
 EOM
 
