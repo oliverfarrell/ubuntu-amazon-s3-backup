@@ -111,10 +111,10 @@ EOM
 chmod 775 "$BACKUP_PATH/run"
 
 fancy_echo "Adding default schedule to CRON"
-#  crontab -l > "$BACKUP_PATH/tmp/mycron"
-#  echo "0 1 * * * $BACKUP_PATH/run" >> "$BACKUP_PATH/tmp/mycron"
-#  crontab "$BACKUP_PATH/tmp/mycron"
-#  rm "$BACKUP_PATH/tmp/mycron"
+crontab -l > "$BACKUP_PATH/tmp/mycron"
+echo "0 1 * * * $BACKUP_PATH/run" >> "$BACKUP_PATH/tmp/mycron"
+crontab "$BACKUP_PATH/tmp/mycron"
+rm "$BACKUP_PATH/tmp/mycron"
 
 fancy_echo "If you would like to alter the script please alter the CRON Job \"crontab -e\""
 
