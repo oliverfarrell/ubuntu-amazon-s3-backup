@@ -18,7 +18,7 @@ SITE_BACKUP_SRC=${SITE_BACKUP_SRC:-$SITE_BACKUP_SRC_DEFAULT}
 
 read -p "Would you like to backup a MYSQL database? (y/n) [n]:" MYSQL_BACKUP
 MYSQL_BACKUP=${MYSQL_BACKUP}
-if [[ $MYSQL_BACKUP -eq "y"]] || [[$MYSQL_BACKUP -eq "Y"]]; then
+if [[ $MYSQL_BACKUP -eq "y"] || [$MYSQL_BACKUP -eq "Y"]]; then
   read -p "Please provide the MYSQL user you would like to save the database for:" MYSQL_USER
   MYSQL_USER=${MYSQL_USER}
 
@@ -67,7 +67,7 @@ $BACKUP_PATH/tmp/awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 fancy_echo "Finished installing and setting up AWS"
 fancy_echo "Setting rest of the scripts up"
 
-if [[ $MYSQL_BACKUP -eq "y"]] || [[$MYSQL_BACKUP -eq "Y"]]; then
+if [[ $MYSQL_BACKUP -eq "y"] || [$MYSQL_BACKUP -eq "Y"]]; then
   /bin/cat <<EOM >$BACKUP_PATH/mysql
   mysql -s -r -u $MYSQL_USER -p$MYSQL_PASSWORD -e 'show databases' | while read db; do mysqldump --skip-lock-tables -u $MYSQL_SERVER -p$MYSQL_PASSWORD $db -r $BACKUP_PATH/databases/raw/${db}.sql; [[ $? -eq 0 ]] && gzip ~/backup/databases/raw/${db}.sql; done
 EOM
@@ -84,7 +84,7 @@ fi
 # create a folder where we can dump all the raw .sql files
 mkdir -p $BACKUP_PATH/databases/raw/ # this is a temp directory, it'll be deleted later
 
-if [[ $MYSQL_BACKUP -eq "y"]] || [[$MYSQL_BACKUP -eq "Y"]]; then
+if [[ $MYSQL_BACKUP -eq "y"] || [$MYSQL_BACKUP -eq "Y"]]; then
   # grab all mysql databases
   $BACKUP_PATH/mysql # a python script
 
